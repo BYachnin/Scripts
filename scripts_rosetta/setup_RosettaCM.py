@@ -1,0 +1,1 @@
+/home/by122/Rosetta/tools/protein_tools/scripts/setup_RosettaCM.py

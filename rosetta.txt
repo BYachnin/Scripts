@@ -1,0 +1,1 @@
+./scons.py -j12 mode=release bin cxx=clang extras=static
