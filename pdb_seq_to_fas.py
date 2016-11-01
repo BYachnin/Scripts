@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from rosetta import *
+from pyrosetta import *
 init("-ignore_unrecognized_res")
 
 seq_file = open("sequences.fas", "w")

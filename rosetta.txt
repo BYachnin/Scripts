@@ -1,1 +1,2 @@
-./scons.py -j12 mode=release bin cxx=clang extras=static
+./scons.py -j12 mode=release bin cxx=clang
+./scons.py -j30 mode=release bin/rosetta_scripts.linuxclangrelease cxx=clang extras=static

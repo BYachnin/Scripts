@@ -3,7 +3,7 @@
 
 import os, sys
 
-from rosetta import *
+from pyrosetta import *
 init("-ignore_unrecognized_res")
 
 def main(argv):

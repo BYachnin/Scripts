@@ -14,7 +14,7 @@ outfile = open(outfilename, 'w')
 
 filelist = infile.readlines()
 
-from rosetta import *
+import pyrosetta
 init("-ignore_unrecognized_res")
 
 for pdb in filelist:
