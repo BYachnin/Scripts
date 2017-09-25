@@ -126,3 +126,31 @@ def compare_scorebyres(pdbfile, scoreterm="total", compare="", threshold=0, outf
 		outfile.close()
 			
 	return outlist;
+	
+#Usage: codopt(protein_sequence_string, dictionary_of_codons)
+#This function uses codon_tools to reverse translate a protein sequence back to DNA.  The DNA sequence is returned as a string.
+#usable_codons can be passed to create a custom set of codons to use.
+#Otherwise, a default codon table containing common E. coli codons is used.
+def codopt(protein_string, usable_codons = {  'A':['GCA', 'GCC', 'GCG'], 'R':['CGT', 'CGC'], 'N':['AAC', 'AAT'], 'D':['GAC', 'GAT'], 'C':['TGC', 'TGT' ], 'Q':['CAA', 'CAG'], 'E':['GAA'], 'G':['GGC', 'GGT'], 'H':['CAC', 'CAT'], 'I':['ATC', 'ATT'], 'L':['CTC', 'CTG', 'CTT', 'TTA', 'TTG'], 'F':['TTT', 'TTC'], 'P':['CCA', 'CCG', 'CCT'], 'S':['AGC', 'TCC','TCT'], 'T':[ 'ACT', 'ACC', 'ACG' ], 'Y':['TAC', 'TAT'], 'V':['GTA', 'GTC', 'GTG', 'GTT'], 'W':['TGG'], 'M':['ATG'], 'K':['AAA', 'AAG'], '*':['TAA', 'TAG', 'TGA']}):
+	#Import modules
+	from Bio.Seq import Seq
+	from Bio.Alphabet import generic_protein
+	from codon_tools import FopScorer, CodonOptimizer
+	
+	#Define a codon scorer that uses the codon frequency table above.
+	scorer = FopScorer(opt_codons = usable_codons)
+	#Define an optimizer based on scorer
+	opt = CodonOptimizer(scorer)
+	
+	#Create a sequence object from the protein_string
+	protein_seq = Seq(protein_string, generic_protein)
+	#Randomly reverse translate the sequence.
+	randdnaseq = opt.random_reverse_translate(protein_seq)
+	#Now codon optimize.
+	dnaseq = opt.hillclimb(randdnaseq)
+	
+	#Assert that the dnaseq matches the original protein sequence.
+	assert str(Seq.translate(dnaseq[0])) == str(protein_seq)
+	
+	#Convert dnaseq to a string and return.
+	return(str(dnaseq[0]))
