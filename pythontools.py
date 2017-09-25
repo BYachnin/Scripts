@@ -18,7 +18,7 @@ def pullscores(*arg):
 	for score_term in arg:
 		for pdbline in reversed(readlines(pdbfile)):
 			if pdbline.startswith('#'): #assumes all score terms are at the end of the file, no comments after them
-				print "WARNING: The scoreterm " + score_term + " was not found in the PDB file " + pdbfilename
+				print("WARNING: The scoreterm " + score_term + " was not found in the PDB file " + pdbfilename)
 				break
 			#Split the current line into scoreterm name and score.
 			(this_term, score)=pdbline.split()[:2]
@@ -99,8 +99,8 @@ def compare_scorebyres(pdbfile, scoreterm="total", compare="", threshold=0, outf
 		comparelist = scorebyres(compare, scoreterm)
 			
 		if (len(mainlist) != len(comparelist)):
-			print "WARNING: The two lists have different numbers of residues in the score table."
-			print "You may not get the results you expect."
+			print("WARNING: The two lists have different numbers of residues in the score table.")
+			print("You may not get the results you expect.")
 		
 		#Create the output list.
 		outlist = []
