@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os, sys, argparse
+import os, sys, argparse, subprocess
 
 #This is an exception class to catch Argument errors.
 class ArgError(Exception):
@@ -127,7 +127,13 @@ def make_script(args, key):
 	
 	return(script)
 			
-
+#Write all the data in script to the file scriptname.
+def write_script(script, scriptname):
+	outfile = open(scriptname, 'w')
+	for line in script:
+		outfile.write(line)
+	outfile.close()
+			
 def main(argv):
 	#Setup a list of tuples.  Each tuple should contain:
 	#(0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class)
@@ -149,6 +155,20 @@ def main(argv):
 	
 	for line in slurm_script:
 		print(line)
+	
+	#Make a filename from the jobname, and then write the script.
+	scriptname = 'tmp_' + args.job + '.sh'
+	write_script(script, scriptname)
+	
+	#If desired, execute the script.
+	if args.execute == True:
+		#Run the script, waiting for it to finish.
+		subprocess.call('sbatch ' + scriptname)
+		
+	#If desired, cleanup the script.
+	if args.cleanup == True:
+		#Delete the script.
+		os.remove(scriptname)
 		
 if __name__ == "__main__":
 	main(sys.argv[1:])
