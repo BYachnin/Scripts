@@ -33,6 +33,7 @@ def gen_varkey():
 	return vars
 
 def gen_argparser(argv, key):
+	import distutils.util
 	#Parse command line arguments (argv) using the information stored in the list of tuples.
 	parser = argparse.ArgumentParser(description='My Description')
 	#parser.add_argument('--job-name', type=str, required=True)
@@ -49,7 +50,10 @@ def gen_argparser(argv, key):
 	#parser.add_argument('--cleanup', type=bool, default=True)
 	#parser.add_argument('--command', type=str, required=True)
 	for argnum in range(0, len(key)):
-		parser.add_argument('--'+key[argnum][0], type=key[argnum][2], default=key[argnum][3], required=key[argnum][4])
+		if key[argnum][2] == bool:
+			parser.add_argument('--'+key[argnum][0], type=distutils.util.strtobool, default=key[argnum][3], required=key[argnum][4])
+		else:
+			parser.add_argument('--'+key[argnum][0], type=key[argnum][2], default=key[argnum][3], required=key[argnum][4])
 	
 	#--export=ALL
 	args = parser.parse_args()
@@ -93,7 +97,7 @@ def arg_logic(args, key):
 #It uses the command line arguments (args) and the list of tuples to figure out what to do with it all.
 def make_script(args, key):
 	#Add the #! and --export=ALL.
-	script = ['#!/bin/bash', '#SBATCH --export=ALL\n']
+	script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
 	
 	#argnum = 0
 	#for argnum in range(0, len(args)):
@@ -158,12 +162,16 @@ def main(argv):
 	
 	#Make a filename from the jobname, and then write the script.
 	scriptname = 'tmp_' + args.job + '.sh'
-	write_script(script, scriptname)
+	write_script(slurm_script, scriptname)
+	
+	#print('execute: ' + str(args.execute))
+	#print('cleanup: ' + str(args.cleanup))
 	
 	#If desired, execute the script.
 	if args.execute == True:
 		#Run the script, waiting for it to finish.
-		subprocess.call('sbatch ' + scriptname)
+		#subprocess.call(['sbatch', scriptname])
+		subprocess.call(['cat', scriptname])
 		
 	#If desired, cleanup the script.
 	if args.cleanup == True:
