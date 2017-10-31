@@ -107,7 +107,7 @@ def make_script(args, key):
 		#argnum = argnum + 1
 			
 	#Add the command line to the bottom of the script.
-	script.append(args.command)
+	script.append(args.command + "\n")
 	
 	return(script)
 			
@@ -137,9 +137,10 @@ def main(argv):
 	#Process the arguments and generate the slurm script.
 	slurm_script = make_script(procargs, varkey)
 	
+	#Print the script to screen.
 	for line in slurm_script:
-		print(line)
-	
+		print(line),
+		
 	#Make a filename from the jobname, and then write the script.
 	scriptname = 'tmp_' + args.job + '.sh'
 	write_script(slurm_script, scriptname)
