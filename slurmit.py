@@ -14,20 +14,20 @@ class ArgError(Exception):
 def gen_varkey():
 	vars = []
 	
-	#(0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class)
-	vars.append(('job', 'job-name', str, None, True, 'regular'))
-	vars.append(('partition', 'partition', str, 'main', False, 'regular'))
-	vars.append(('requeue', 'requeue', bool, True, False, 'boolean'))
-	vars.append(('tasks', 'ntasks', int, 1, False, 'regular'))
-	vars.append(('cpus', 'cpus-per-task', int, 1, False, 'regular'))
-	vars.append(('mem', 'mem', str, "2000", False, 'regular'))
-	vars.append(('outfiles', None, str, "", False, 'other'))
-	vars.append(('log', 'output', str, "", False, 'regular'))
-	vars.append(('err', 'error', str, "", False, 'regular'))
-	vars.append(('time', 'time', str, "3-00:00:00", False, 'regular'))
-	vars.append(('execute', None, bool, True, False, 'other'))
-	vars.append(('cleanup', None, bool, True, False, 'other'))
-	vars.append(('command', None, str, None, True, 'other'))
+	#(0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class, 6 help)
+	vars.append(('job', 'job-name', str, None, True, 'regular', 'The SLURM name for your job (--job-name).  Will be used to generate log/err filenames if not given.'))
+	vars.append(('partition', 'partition', str, 'main', False, 'regular', 'The SLURM partition to run on (--partition).'))
+	vars.append(('requeue', 'requeue', bool, True, False, 'boolean', 'Run SLURM with the requeue option turned on (--requeue).'))
+	vars.append(('tasks', 'ntasks', int, 1, False, 'regular', 'The number of SLURM tasks to request (--ntasks).'))
+	vars.append(('cpus', 'cpus-per-task', int, 1, False, 'regular', 'The number of CPUs to request for each task (--cpus-per-task).'))
+	vars.append(('mem', 'mem', str, "2000", False, 'regular', 'The memory to reserve (--mem).'))
+	vars.append(('outfiles', None, str, "", False, 'other', 'The name of the log and error files (--output and --err).  This will use the same name for both files, with the extensions .log and .err.'))
+	vars.append(('log', 'output', str, "", False, 'regular', 'The name of the log file (--output).  Do not use this together with the outfiles option.'))
+	vars.append(('err', 'error', str, "", False, 'regular', 'The name of the error file (--err).  Do not use this together with the outfiles option.'))
+	vars.append(('time', 'time', str, "3-00:00:00", False, 'regular', 'The maximum walltime allowed for the job (--time).'))
+	vars.append(('execute', None, bool, True, False, 'other', 'Do you want to execute the script, or just make the script file?'))
+	vars.append(('cleanup', None, bool, True, False, 'other', 'Do you want to delete the script after it is submitted?'))
+	vars.append(('command', None, str, None, True, 'other', "The job's command: in other words what you would type into a bash shell to run it normally.  Surround with quotation marks to make sure it is parsed correctly."))
 	#--export=ALL
 	
 	return vars
@@ -35,7 +35,7 @@ def gen_varkey():
 def gen_argparser(argv, key):
 	import distutils.util
 	#Parse command line arguments (argv) using the information stored in the list of tuples.
-	parser = argparse.ArgumentParser(description='My Description')
+	parser = argparse.ArgumentParser(description='This script generates a SLURM script for a desired command.  You must provide the job name and the command.  SLURM options can be changed to alter your typical #SBATCH variables.  The options below list the SLURM options being controlled in parentheses.')
 	#parser.add_argument('--job-name', type=str, required=True)
 	#parser.add_argument('--partition', type=str, default='main')
 	#parser.add_argument('--requeue', type=bool, default=True)
@@ -51,9 +51,9 @@ def gen_argparser(argv, key):
 	#parser.add_argument('--command', type=str, required=True)
 	for argnum in range(0, len(key)):
 		if key[argnum][2] == bool:
-			parser.add_argument('--'+key[argnum][0], type=distutils.util.strtobool, default=key[argnum][3], required=key[argnum][4])
+			parser.add_argument('--'+key[argnum][0], type=distutils.util.strtobool, default=key[argnum][3], required=key[argnum][4], help=key[argnum][6])
 		else:
-			parser.add_argument('--'+key[argnum][0], type=key[argnum][2], default=key[argnum][3], required=key[argnum][4])
+			parser.add_argument('--'+key[argnum][0], type=key[argnum][2], default=key[argnum][3], required=key[argnum][4], help=key[argnum][6])
 	
 	#--export=ALL
 	args = parser.parse_args()
