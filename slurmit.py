@@ -36,19 +36,7 @@ def gen_argparser(argv, key):
 	import distutils.util
 	#Parse command line arguments (argv) using the information stored in the list of tuples.
 	parser = argparse.ArgumentParser(description='This script generates a SLURM script for a desired command.  You must provide the job name and the command.  SLURM options can be changed to alter your typical #SBATCH variables.  The options below list the SLURM options being controlled in parentheses.')
-	#parser.add_argument('--job-name', type=str, required=True)
-	#parser.add_argument('--partition', type=str, default='main')
-	#parser.add_argument('--requeue', type=bool, default=True)
-	#parser.add_argument('--ntasks', type=int, default=1)
-	#parser.add_argument('--cpus-per-task', type=int, default=1)
-	#parser.add_argument('--mem', type=str, default="2000")
-	#parser.add_argument('--outfiles', type=str, default="")
-	#parser.add_argument('--output', type=str, default="")
-	#parser.add_argument('--error', type=str, default="")
-	#parser.add_argument('--time', type=str, default="3-00:00:00")
-	#parser.add_argument('--execute', type=bool, default=True)
-	#parser.add_argument('--cleanup', type=bool, default=True)
-	#parser.add_argument('--command', type=str, required=True)
+
 	for argnum in range(0, len(key)):
 		if key[argnum][2] == bool:
 			parser.add_argument('--'+key[argnum][0], type=distutils.util.strtobool, default=key[argnum][3], required=key[argnum][4], help=key[argnum][6])
@@ -99,9 +87,6 @@ def make_script(args, key):
 	#Add the #! and --export=ALL.
 	script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
 	
-	#argnum = 0
-	#for argnum in range(0, len(args)):
-	
 	#Loop over all arguments in the key.
 	for argnum in range(len(key)):
 		#Do not add a line unless we have processed this variable and switched the flag on addline.
@@ -120,12 +105,7 @@ def make_script(args, key):
 		if addline == True:
 			script.append(line)
 		#argnum = argnum + 1
-		
-	# for boolarg in [arg.requeue]:
-		# if boolarg == True:
-			# line = "#SBATCH --requeue\n"
-		# script.append(line)
-		
+			
 	#Add the command line to the bottom of the script.
 	script.append(args.command)
 	
@@ -163,10 +143,7 @@ def main(argv):
 	#Make a filename from the jobname, and then write the script.
 	scriptname = 'tmp_' + args.job + '.sh'
 	write_script(slurm_script, scriptname)
-	
-	#print('execute: ' + str(args.execute))
-	#print('cleanup: ' + str(args.cleanup))
-	
+		
 	#If desired, execute the script.
 	if args.execute == True:
 		#Run the script, waiting for it to finish.
@@ -180,4 +157,3 @@ def main(argv):
 		
 if __name__ == "__main__":
 	main(sys.argv[1:])
-
