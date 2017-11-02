@@ -20,7 +20,7 @@ def gen_varkey():
 	vars.append(('requeue', 'requeue', bool, True, False, 'boolean', 'Run SLURM with the requeue option turned on (--requeue).'))
 	vars.append(('tasks', 'ntasks', int, 1, False, 'regular', 'The number of SLURM tasks to request (--ntasks).'))
 	vars.append(('cpus', 'cpus-per-task', int, 1, False, 'regular', 'The number of CPUs to request for each task (--cpus-per-task).'))
-	vars.append(('array', 'array', str, None, False, 'array', 'Enter the number of array elements to include.  For example, an array with 10 subjobs numbered 1-10 should be given --array 1-10'))
+	vars.append(('array', 'array', str, None, False, 'array', "Enter the number of array elements to include.  For example, an array with 10 subjobs numbered 1-10 should be given --array 1-10.  If you include this, you must put 'percenta' in --outfiles/--log/--err and 'dollarjob' in --command."))
 	vars.append(('mem', 'mem', str, "2000", False, 'regular', 'The memory to reserve (--mem).'))
 	vars.append(('outfiles', None, str, "", False, 'other', 'The name of the log and error files (--output and --err).  This will use the same name for both files, with the extensions .log and .err.'))
 	vars.append(('log', 'output', str, "", False, 'regular', 'The name of the log file (--output).  Do not use this together with the outfiles option.'))
@@ -28,7 +28,7 @@ def gen_varkey():
 	vars.append(('time', 'time', str, "3-00:00:00", False, 'regular', 'The maximum walltime allowed for the job (--time).'))
 	vars.append(('execute', None, bool, True, False, 'other', 'Do you want to execute the script, or just make the script file?'))
 	vars.append(('cleanup', None, bool, True, False, 'other', 'Do you want to delete the script after it is submitted?'))
-	vars.append(('command', None, str, None, True, 'other', "The job's command: in other words what you would type into a bash shell to run it normally.  Surround with quotation marks to make sure it is parsed correctly."))
+	vars.append(('command', None, str, None, True, 'other', "The job's command: in other words what you would type into a bash shell to run it normally.  Surround with single quotes to make sure it is parsed correctly."))
 	#--export=ALL
 	
 	return vars
@@ -78,7 +78,7 @@ def validate(args):
 			if (args.err != '') and ('%a' not in args.err):
 				raise ArgError('You have created an array submission without putting %a in the --err parameter.')
 			
-			if "'$job'" not in args.command:
+			if "$job" not in args.command:
 				raise ArgError("You have created an array submission without putting '$job' in the --command parameter.")
 	except ArgError:
 		exit()
@@ -103,6 +103,11 @@ def make_script(args, key):
 	#Add the #! and --export=ALL.
 	script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
 	
+	#Add array if it is defined.
+	if args.array != None:
+		line = "#SBATCH --array " + args.array + '\n'
+		script.append(line)
+	
 	#Loop over all arguments in the key.
 	for argnum in range(len(key)):
 		#Do not add a line unless we have processed this variable and switched the flag on addline.
@@ -121,6 +126,10 @@ def make_script(args, key):
 		if addline == True:
 			script.append(line)
 		#argnum = argnum + 1
+		
+	#If we are using arrays, add the definition of job.
+	if args.array != None:
+		script.append("job=$SLURM_ARRAY_TASK_ID\n")
 			
 	#Add the command line to the bottom of the script.
 	script.append(args.command + "\n")
@@ -143,6 +152,7 @@ def main(argv):
 
 	#Generate the argument list using argparser
 	args = gen_argparser(argv, varkey)
+	print(args.command)
 	
 	#Validate arguments
 	validate(args)
