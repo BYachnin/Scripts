@@ -4,9 +4,9 @@ import os, sys, argparse, subprocess
 
 #This is an exception class to catch Argument errors.
 class ArgError(Exception):
-	def __init__(self, expr, msg):
-		self.expr = expr
+	def __init__(self, msg):
 		self.msg = msg
+		print(self.msg)
 		
 #This function returns a list of tuples.  Each item in the list corresponds to one argument taken from the command line.
 #The members of the tuple describe how the variable should be handled in various places.
@@ -15,11 +15,12 @@ def gen_varkey():
 	vars = []
 	
 	#(0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class, 6 help)
-	vars.append(('job', 'job-name', str, None, True, 'regular', 'The SLURM name for your job (--job-name).  Will be used to generate log/err filenames if not given.'))
+	vars.append(('job', 'job-name', str, None, True, 'regular', 'The SLURM name for your job (--job-name).  Will be used to generate log/err filenames if not given, in which case it will genereate the files in the current directory.'))
 	vars.append(('partition', 'partition', str, 'main', False, 'regular', 'The SLURM partition to run on (--partition).'))
 	vars.append(('requeue', 'requeue', bool, True, False, 'boolean', 'Run SLURM with the requeue option turned on (--requeue).'))
 	vars.append(('tasks', 'ntasks', int, 1, False, 'regular', 'The number of SLURM tasks to request (--ntasks).'))
 	vars.append(('cpus', 'cpus-per-task', int, 1, False, 'regular', 'The number of CPUs to request for each task (--cpus-per-task).'))
+	vars.append(('array', 'array', str, None, False, 'array', 'Enter the number of array elements to include.  For example, an array with 10 subjobs numbered 1-10 should be given --array 1-10'))
 	vars.append(('mem', 'mem', str, "2000", False, 'regular', 'The memory to reserve (--mem).'))
 	vars.append(('outfiles', None, str, "", False, 'other', 'The name of the log and error files (--output and --err).  This will use the same name for both files, with the extensions .log and .err.'))
 	vars.append(('log', 'output', str, "", False, 'regular', 'The name of the log file (--output).  Do not use this together with the outfiles option.'))
@@ -66,6 +67,21 @@ def validate(args):
 			int(args.mem)
 	except ValueError:
 		exit("--mem must be provided as an integer or an integer followed by the suffix K, M, G, or T for kilobyte, megabyte, gigabyte, or terrabyte.")
+		
+	#If --array is given, make sure %a is in output and error filenames, and '$job' is in the command script.
+	try:
+		if args.array != None:
+			if (args.outfiles != '') and ('%a' not in args.outfiles):
+				raise ArgError('You have created an array submission without putting %a in the --outfiles parameter.')
+			if (args.log != '') and ('%a' not in args.log):
+				raise ArgError('You have created an array submission without putting %a in the --log parameter.')
+			if (args.err != '') and ('%a' not in args.err):
+				raise ArgError('You have created an array submission without putting %a in the --err parameter.')
+			
+			if "'$job'" not in args.command:
+				raise ArgError("You have created an array submission without putting '$job' in the --command parameter.")
+	except ArgError:
+		exit()
 
 #Make final variable values depending on the user input.
 def arg_logic(args, key):
