@@ -146,8 +146,8 @@ def write_script(script, scriptname):
 def main(argv):
 	#Setup a list of tuples.  Each tuple should contain:
 	#(0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class)
-	#class should be 'regular' for SLURM parameters that receive an argument, 'boolean' for those that either appear or do not, and
-	#'other' for other types of arguments.
+	#class should be 'regular' for SLURM parameters that receive an argument, 'boolean' for those that either appear or do not,
+	#'array' for array-related arguments, 'other' for other types of arguments.
 	varkey = gen_varkey()
 
 	#Generate the argument list using argparser
@@ -174,8 +174,8 @@ def main(argv):
 	#If desired, execute the script.
 	if args.execute == True:
 		#Run the script, waiting for it to finish.
-		#subprocess.call(['sbatch', scriptname])
-		subprocess.call(['cat', scriptname])
+		subprocess.call(['sbatch', scriptname])
+		#subprocess.call(['cat', scriptname])
 		
 	#If desired, cleanup the script.
 	if args.cleanup == True:
