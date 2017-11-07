@@ -87,12 +87,12 @@ def validate(args):
 def arg_logic(args, key):
 	#If outfiles, outfiles, log, and err are all empty, generate log and err based on jobname.
 	if (args.outfiles == '' and args.log == '' and args.err == ''):
-		args.log = args.job + '.out'
+		args.log = args.job + '.log'
 		args.err = args.job + '.err'
 		
 	#If outfiles is defined, set log and err based on outfiles.
 	if (args.outfiles != ''):
-		args.log = args.outfiles + '.out'
+		args.log = args.outfiles + '.log'
 		args.err = args.outfiles + '.err'
 		
 	return(args)
