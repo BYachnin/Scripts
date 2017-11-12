@@ -34,18 +34,18 @@ while getopts :n:f:p: option; do
 	esac
 done
 
-if [ ! -n $numjobs ]; then
+if [ -o $numjobs ]; then
 	echo "The parameter -n (number of jobs) is required." >&2
 	exit 1;
 fi
 
-if [ ! -n $transferto ]; then
+if [ -o $transferto ]; then
 	echo "The parameter -p (partition to transfer to) is required." >&2
 	exit 1;
 fi
 
 #Run squeue, depending on whether -f is supplied.  Store in joblist.
-if [ -n $transferfrom ]; then
+if [ ! -o $transferfrom ]; then
 	joblist=`squeue -u $netid -h -t PD -p $transferfrom -o \%i`
 else
 	joblist=`squeue -u $netid -h -t PD -o \%i`
@@ -58,21 +58,21 @@ transferred=0
 for job in $joblist; do
 	#If we have exceeded the number of jobs to be transferred, break out of the for loop.
 	#When $numjobs is 0, transfer all pending jobs.
-	if [ $numjobs != 0 -a $transferred >= $numjobs ]; then
+	if [[ $numjobs != 0 ]] && [[ $transferred -ge $numjobs ]] ; then
 		break
 	fi
-	echo scontrol update jobid=$job partition=$transferto
+	scontrol update jobid=$job partition=$transferto
 	
 	#Increment the jobs transferred number.
 	transferred=$(($transferred+1))
 done
 
 #Print a warning if the number of jobs to be transferred is different from the number actually transferred.
-if [ $numjobs == 0 ]; then
+if [ $numjobs -eq 0 ]; then
 	echo "Transferred all pending jobs ($transferred) to $transferto."
-elif [ $transferred < $numjobs ]; then
+elif [ $transferred -lt $numjobs ]; then
 	echo "Warning: Requested that $numjobs get transferred to $transferto, but only transferred $transferred.  There were probably fewer than $numjobs pending."
-elif [ $transferred > $numjobs ]; then
+elif [ $transferred -lt $numjobs ]; then
 	echo "Warning: Requested that $numjobs get transferred to $transferto, but transferred $transferred.  Is there an error in the arguments supplied?"
 else
 	echo "Transferred $numjobs to $transferto."
