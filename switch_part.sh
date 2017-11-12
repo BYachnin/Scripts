@@ -10,7 +10,7 @@ usage="Usage: switch_part.sh -n [NUMBER_OF_JOBS_TO_TRANSFER] -f [TRANSFER_FROM] 
 netid=$USER
 
 #Argument processing.
-while getopts n:f:p: option; do
+while getopts :n:f:p: option; do
 	case $option in
 		n)
 			numjobs=$OPTARG
