@@ -46,9 +46,9 @@ fi
 
 #Run squeue, depending on whether -f is supplied.  Store in joblist.
 if [ -n $transferfrom ]; then
-	joblist=`squeue -u $netid -h -t PD -p $transferfrom -o %i`
+	joblist=`squeue -u $netid -h -t PD -p $transferfrom -o \%i`
 else
-	joblist=`squeue -u $netid -h -t PD -o %i`
+	joblist=`squeue -u $netid -h -t PD -o \%i`
 fi
 
 #Set a flag for the number of jobs transferred.
