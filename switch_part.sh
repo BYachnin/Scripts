@@ -34,6 +34,16 @@ while getopts :n:f:p: option; do
 	esac
 done
 
+if [ -n $numjobs ]; then
+	echo "The parameter -n (number of jobs) is required." >&2
+	exit 1;
+fi
+
+if [ -n $transferto ]; then
+	echo "The parameter -p (partition to transfer to) is required." >&2
+	exit 1;
+fi
+
 #Run squeue, depending on whether -f is supplied.  Store in joblist.
 if [ -n $transferfrom ]; then
 	joblist=`squeue -u $netid -h -t PD -p $transferfrom -o %i`
