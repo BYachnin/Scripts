@@ -93,7 +93,11 @@ def validate(args):
 			
 			#If we are using numeric arrays only, make sure $job is in --command.		
 			if args.arraygen == None and "$job" not in args.command:
-				raise ArgError("You have created an array submission without putting '$job' in the --command parameter.")
+				raise ArgError("You have created a numeric array submission (ie. without --arraygen) without putting '$job' in the --command parameter.")
+				
+			#If we are using file-based arrays, make sure $file is in --command.
+			if args.arraygen != None and "$file" not in args.command:
+				raise ArgError("You have created an array submission with --arraygen without putting '$file' in the --command parameter.")
 				
 			#If we are using special filename arrays, make sure arrayformat contains arr and [$job].
 			if "arr" not in args.arrayformat:
@@ -157,8 +161,8 @@ def make_script(args, key):
 			
 	#Add the command line to the bottom of the script.  If using a "special" array, run it with srun.
 	if args.usearray and args.arraygen != None:
-		script.append(args.arraygen + "\n")
-		script.append(args.arrayformat + "\n")
+		script.append("arr=(" + args.arraygen + ")\n")
+		script.append("file=" + args.arrayformat + "\n")
 		script.append("srun " + args.command + "\n")
 	else:
 		script.append(args.command + "\n")
