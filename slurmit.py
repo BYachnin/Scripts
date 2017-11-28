@@ -76,9 +76,14 @@ def validate(args):
 	except ValueError:
 		exit("--mem must be provided as an integer or an integer followed by the suffix K, M, G, or T for kilobyte, megabyte, gigabyte, or terrabyte.")
 		
-	#If --array is given, make sure %a is in output and error filenames, and '$job' is in the command script.
+	#If using arrays, make sure %a is in output and error filenames, and '$job' is in the command script.
 	try:
-		if args.array != None:
+		if args.usearray:
+			#Make sure --array and/or --arraygen are given.
+			if args.arraygen == None and args.array == None:
+				raise ArgError("You are creating an array submission without providing either --arraygen or --array.")
+				
+			#Check for %a in the logs.
 			if (args.outfiles != '') and ('%a' not in args.outfiles):
 				raise ArgError('You have created an array submission without putting %a in the --outfiles parameter.')
 			if (args.log != '') and ('%a' not in args.log):
@@ -86,8 +91,15 @@ def validate(args):
 			if (args.err != '') and ('%a' not in args.err):
 				raise ArgError('You have created an array submission without putting %a in the --err parameter.')
 			
-			if "$job" not in args.command:
+			#If we are using numeric arrays only, make sure $job is in --command.		
+			if args.arraygen == None and "$job" not in args.command:
 				raise ArgError("You have created an array submission without putting '$job' in the --command parameter.")
+				
+			#If we are using special filename arrays, make sure arrayformat contains arr and [$job].
+			if "arr" not in args.arrayformat:
+				raise ArgError("You have given --arrayformat without referencing $arr.  The $arr variable is used to access the array elements, and must be included in --arrayformat.")
+			if "[$job]" not in args.arrayformat:
+				raise ArgError("You have given --arrayformat without referencing $job.  You must include $job for substitution of the array index.")
 	except ArgError:
 		exit()
 
