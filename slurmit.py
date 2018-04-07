@@ -22,6 +22,7 @@ def gen_varkey():
 	vars.append(('job', 'job-name', str, None, True, 'regular', 'The SLURM name for your job (--job-name).  Will be used to generate log/err filenames if not given, in which case it will genereate the files in the current directory.'))
 	vars.append(('partition', 'partition', str, 'main', False, 'regular', 'The SLURM partition to run on (--partition).'))
 	vars.append(('requeue', 'requeue', bool, True, False, 'boolean', 'Run SLURM with the requeue option turned on (--requeue).'))
+	vars.append(('openmode', 'open-mode', str, None, False, 'regular', 'Should the log and err files be overwritten (truncate) or appended (append) if the file already exists.  The default is truncate, unless requeue is set, in which case the default append.'))
 	vars.append(('tasks', 'ntasks', int, 1, False, 'regular', 'The number of SLURM tasks to request (--ntasks).'))
 	vars.append(('cpus', 'cpus-per-task', int, 1, False, 'regular', 'The number of CPUs to request for each task (--cpus-per-task).'))
 	vars.append(('usearray', None, bool, False, False, 'other', "Is this job being submitted as an array?  If so, either the --array flag must be given with the number of jobs, or --arraygen must be used to generate the array members.  The former case is for running a number of identical jobs (or jobs that differ only by a sequential number in an input filename), while the latter is for running an array with a list of arbitrary filenames."))
@@ -124,6 +125,14 @@ def arg_logic(args, key):
 		if args.array == None:
 			arraylen = len(glob.glob(args.arraygen))
 			args.array = "0-" + str(arraylen-1)
+			
+	#If args.openmode is not defined, set it according to whether requeue is set.
+	#If it is defined, use whatever the user said.
+	if args.openmode == None:
+		if args.requeue == True:
+			args.openmode == 'append'
+		else:
+			args.openmode == 'truncate'
 
 	return(args)
 		
