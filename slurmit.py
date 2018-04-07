@@ -81,8 +81,8 @@ def validate(args):
 	try:
 		if args.openmode != None and args.openmode != 'append' and args.openmode != 'truncate':
 			raise ArgError('The only valid options for --openmode are "append" or "truncate".')
-		except ArgError:
-			exit()
+	except ArgError:
+		exit()
 		
 	#If using arrays, make sure %a is in output and error filenames, and '$job' is in the command script.
 	try:
