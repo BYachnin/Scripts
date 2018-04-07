@@ -130,9 +130,9 @@ def arg_logic(args, key):
 	#If it is defined, use whatever the user said.
 	if args.openmode == None:
 		if args.requeue == True:
-			args.openmode == 'append'
+			args.openmode = 'append'
 		else:
-			args.openmode == 'truncate'
+			args.openmode = 'truncate'
 
 	return(args)
 		
