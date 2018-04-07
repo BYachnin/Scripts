@@ -194,7 +194,6 @@ def main(argv):
 
 	#Generate the argument list using argparser
 	args = gen_argparser(argv, varkey)
-	print(args.command)
 	
 	#Validate arguments
 	validate(args)
