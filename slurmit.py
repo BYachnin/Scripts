@@ -77,6 +77,13 @@ def validate(args):
 	except ValueError:
 		exit("--mem must be provided as an integer or an integer followed by the suffix K, M, G, or T for kilobyte, megabyte, gigabyte, or terrabyte.")
 		
+	#--openmode must be either None, append, or truncate.
+	try:
+		if args.openmode != None and args.openmode != 'append' and args.openmode != 'truncate':
+			raise ArgError('The only valid options for --openmode are "append" or "truncate".')
+		except ArgError:
+			exit()
+		
 	#If using arrays, make sure %a is in output and error filenames, and '$job' is in the command script.
 	try:
 		if args.usearray:
