@@ -36,7 +36,7 @@ def gen_varkey():
 	vars.append(('time', 'time', str, "3-00:00:00", False, 'regular', 'The maximum walltime allowed for the job (--time).'))
 	vars.append(('begin', 'begin', str, "now+15minutes", False, 'regular', 'The time to start the script.  By default, 15 minutes after submission to avoid overloading the scheduler.'))
 	vars.append(('execute', None, bool, True, False, 'other', 'Do you want to execute the script, or just make the script file?'))
-	vars.append(('cleanup', None, bool, True, False, 'other', 'Do you want to delete the script after it is submitted?'))
+	vars.append(('cleanup', None, bool, True, False, 'other', 'Do you want to delete the script after it is submitted?  If sbatch submission fails, the script will NOT be deleted.  If your job fails for other reasons, the script still get deleted.'))
 	vars.append(('command', None, str, None, True, 'other', "The job's command: in other words what you would type into a bash shell to run it normally.  Surround with single quotes or use backslahes to escape symbols to make sure it is parsed correctly.  The variable dollarfile will be populated from --arraygen, when the latter is used."))
 	#--export=ALL
 	
