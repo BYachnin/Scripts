@@ -219,14 +219,16 @@ def main(argv):
 	scriptname = 'tmp_' + args.job + '.sh'
 	write_script(slurm_script, scriptname)
 		
-	#If desired, execute the script.
+	#If desired, execute the script.  Keep the error code stored in code_sbatch.
+	code_sbatch = 0
 	if args.execute == True:
 		#Run the script, waiting for it to finish.
-		subprocess.call(['sbatch', scriptname])
+		code_sbatch = subprocess.call(['sbatch', scriptname])
 		#subprocess.call(['cat', scriptname])
 		
 	#If desired, cleanup the script.
-	if args.cleanup == True:
+	#Only do this if code_sbatch is 0, which means that sbatch completed without an error.  Scripts that fail to submit won't be deleted for later re-submission.
+	if args.cleanup == True and code_sbatch == 0:
 		#Delete the script.
 		os.remove(scriptname)
 		
