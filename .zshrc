@@ -99,6 +99,8 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 #
 ######### Brahm's stuff
+export HOSTALIASES=~/.hosts
+
 export PATH=$PATH:~/scripts:~/scripts/scripts_rosetta	#my scripts
 
 export HOSTNAME=$(hostname)
