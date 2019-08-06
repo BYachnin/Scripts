@@ -171,9 +171,10 @@ def make_script(args, key):
 		if addline == True:
 			script.append(line)
 		
-	#If we are using arrays, add the definition of job.
+	#If we are using arrays, add the definition of job.  Also add a delay to avoid starting all processes at the same time.
 	if args.array != None:
 		script.append("job=$SLURM_ARRAY_TASK_ID\n")
+		script.append("sleep $( expr 5 \* $SLURM_ARRAY_TASK_ID )\n")
 			
 	#Add the command line to the bottom of the script.  If using a "special" array, run it with srun.
 	if args.usearray and args.arraygen != None:
