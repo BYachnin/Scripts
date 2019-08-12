@@ -114,4 +114,8 @@ ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
 ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}✗"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 
+#Any local .zshrc settings should go in .zshrc_local
 source ~/.zshrc_local
+
+#Add syntax highlighting (should be the last thing).
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
