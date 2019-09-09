@@ -37,6 +37,7 @@ def gen_varkey():
 	vars.append(('begin', 'begin', str, "now+15minutes", False, 'regular', 'The time to start the script.  By default, 15 minutes after submission to avoid overloading the scheduler.'))
 	vars.append(('execute', None, bool, True, False, 'other', 'Do you want to execute the script, or just make the script file?'))
 	vars.append(('cleanup', None, bool, True, False, 'other', 'Do you want to delete the script after it is submitted?  If sbatch submission fails, the script will NOT be deleted.  If your job fails for other reasons, the script still get deleted.'))
+        vars.append(('sleep', None, int, 0, False, 'other', 'Add a sleep command before running the main command.  The delay time will be the value given, in seconds, times the array ID.  For example, if you give --sleep 5, the array job with index 123 will be delayed 615 seconds (123 * 5).  If not using arrays, this will be ignored.'))
 	vars.append(('command', None, str, None, True, 'other', "The job's command: in other words what you would type into a bash shell to run it normally.  Surround with single quotes or use backslahes to escape symbols to make sure it is parsed correctly.  The variable dollarfile will be populated from --arraygen, when the latter is used."))
 	#--export=ALL
 	
@@ -174,7 +175,7 @@ def make_script(args, key):
 	#If we are using arrays, add the definition of job.  Also add a delay to avoid starting all processes at the same time.
 	if args.array != None:
 		script.append("job=$SLURM_ARRAY_TASK_ID\n")
-		script.append("sleep $( expr 5 \* $SLURM_ARRAY_TASK_ID )\n")
+                if args.sleep != 0: script.append("sleep $( expr " + str(args.sleep) + " \* $SLURM_ARRAY_TASK_ID )\n")
 			
 	#Add the command line to the bottom of the script.  If using a "special" array, run it with srun.
 	if args.usearray and args.arraygen != None:
