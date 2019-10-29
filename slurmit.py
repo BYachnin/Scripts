@@ -131,7 +131,13 @@ def arg_logic(args, key):
 	#If args.usearray, check if args.array is empty, and autogenerate it if so.
 	if (args.usearray):
 		if args.array == None:
-			arraylen = len(glob.glob(args.arraygen))
+                        # In case multiple wildcards are given, extract them to a list
+                        arraygen_list = args.arraygen.split()
+                        # Glob each list element and add them all together
+                        filelist = []
+                        for arrayspec in arraygen_list:
+                            filelist.extend(glob.glob(arrayspec))
+			arraylen = len(filelist)
 			args.array = "0-" + str(arraylen-1)
 			
 	#If args.openmode is not defined, set it according to whether requeue is set.
