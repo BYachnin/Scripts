@@ -5,10 +5,10 @@
 
 #Set up python and pymol initialization.
 from pymol import cmd
-import sys
+import os, sys
 
 #Reinitialize pymol.
-reinit
+pymol.rcinit
 
 selector="decoy and name CA"	#PyMOL selector for the RMSD calculation.
 
