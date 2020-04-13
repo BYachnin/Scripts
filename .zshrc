@@ -100,14 +100,19 @@ source $ZSH/oh-my-zsh.sh
 #
 ######### Brahm's stuff
 export HOSTALIASES=~/.hosts
-
 export PATH=$PATH:~/scripts:~/scripts/scripts_rosetta	#my scripts
-
 export HOSTNAME=$(hostname)
+export SINGULARITY_SHELL=/usr/bin/zsh
 
 #Modified oh_my_zsh robby_russell theme
 local ret_status="%(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ )"
-PROMPT='${ret_status} %{$fg[cyan]%}%c%{$reset_color%} ${USER}@%{$fg[yellow]%}${HOSTNAME}%{$reset_color%} $(git_prompt_info)$ '
+
+sing_name=" ${SINGULARITY_NAME}"
+if [ $sing_name = " " ]; then
+	sing_name=""
+fi
+
+PROMPT='${ret_status} %{$fg[cyan]%}%c%{$reset_color%} ${USER}@%{$fg[yellow]%}${HOSTNAME}%{$reset_color%}${sing_name} $(git_prompt_info)$ '
 
 ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}git:(%{$fg[red]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
