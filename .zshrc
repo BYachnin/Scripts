@@ -104,6 +104,8 @@ export PATH=$PATH:~/scripts:~/scripts/scripts_rosetta	#my scripts
 export HOSTNAME=$(hostname)
 export SINGULARITY_SHELL=/usr/bin/zsh
 
+alias oo="nautilus . &"
+
 #Modified oh_my_zsh robby_russell theme
 local ret_status="%(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ )"
 
