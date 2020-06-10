@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from typing import List
 
@@ -74,7 +74,7 @@ class SlurmBuilder:
 
 
     def add_control_arg(self, cmd_var: str, vartype: type, default=None, choices: List = None, action: str = "store",
-                        helptxt: str = "", array_var: bool = False):
+                        required: bool = False, helptxt: str = "", array_var: bool = False):
         """
         Add an execution control (i.e. not SLURM) argument to self.parser
 
@@ -83,23 +83,35 @@ class SlurmBuilder:
         :param default: The default value in the
         :param choices: A list of choices allowed for this argument
         :param action: [description], defaults to "store"
-        :param always_include: [description], defaults to True
+        :param required: Make the argument required.
         :param helptxt: [description], defaults to ""
         :param array_var: Argument will be passed to the array group instead of the main parser
         """
 
+        # Catch passing choices if action != 'store'
+        if action != "store" and choices is not None:
+            raise ValueError("Passing in choices with action is not default is prohibited.")
+
         # Add the argument to the argparser
         if array_var:
-            self.array_group.add_argument("--" + cmd_var, help=helptxt, type=vartype, action=action, default=default,
-                                          choices=choices)
+            if action == "store":
+                self.array_group.add_argument("--" + cmd_var, help=helptxt, type=vartype, action=action,
+                                              default=default, choices=choices, required=required)
+            else:
+                self.array_group.add_argument("--" + cmd_var, help=helptxt, action=action, default=default,
+                                              required=required)
         else:
-            self.parser.add_argument("--" + cmd_var, help=helptxt, type=vartype, action=action, default=default,
-                                     choices=choices)
+            if action == "store":
+                self.parser.add_argument("--" + cmd_var, help=helptxt, type=vartype, action=action, default=default,
+                                         choices=choices, required=required)
+            else:
+                self.parser.add_argument("--" + cmd_var, help=helptxt, action=action, default=default,
+                                         required=required)
 
 
     def add_slurm_arg(self, cmd_var: str, vartype: type, slurm_var: str = None, default=None,
-                      choices: List = None, action: str = "store", always_include: bool = True, helptxt: str = "",
-                      array_var: bool = False):
+                      choices: List = None, action: str = "store", required: bool = False, always_include: bool = True,
+                      helptxt: str = "", array_var: bool = False):
         """
         Add a slurm-type argument to self.parser and self.slurmargs
 
@@ -109,7 +121,9 @@ class SlurmBuilder:
         :param default: The default value for argparse
         :param choices: A list of choices allowed for this argument
         :param action: argparser action for this variable, like "store_true"
-        :param always_include: If True, this will be added to the sbatch script regardless of whether a value is passed.  If False, it will only be included if a non-default value is passed in.
+        :param required: Make the argument required.
+        :param always_include: If True, this will be added to the sbatch script regardless of whether a value is
+        passed.  If False, it will only be included if a non-default value is passed in.
         :param helptxt: The argparse help text.
         :param array_var: Argument will be passed to the array group instead of the main parser
         """
@@ -126,7 +140,7 @@ class SlurmBuilder:
 
         # Add the argument to the argparser
         self.add_control_arg(cmd_var=cmd_var, vartype=vartype, helptxt=helptxt, action=action, default=default,
-                             choices=choices, array_var=array_var)
+                             choices=choices, array_var=array_var, required=required)
 
         # Create a SlurmArgument
         slurm_arg = SlurmArgument(slurm_var=slurm_var, cmdvar=cmd_var, vartype=vartype, default=default,
@@ -144,12 +158,14 @@ class SlurmBuilder:
         :param args: The result of self.parser.parse_args()
         """
 
-        # If the user specifies --outfiles (identical prefixes for the log and the error files), they cannot specifiy either --output or --error.
+        # If the user specifies --outfiles (identical prefixes for the log and the error files), they cannot specifiy
+        # either --output or --error.
         if args.outfiles is not None and (args.log is not None or args.err is not None):
             raise ArgError('You have provided both a value for both --outfiles and --log and/or --err.  If you provide '
                            '--outfiles, you cannot provide --log or --err.')
 
-        # --mem is input as a string, as it can be listed as an integer in MB (eg. --mem 10000) or a value with a suffix (eg. --mem 10G).
+        # --mem is input as a string, as it can be listed as an integer in MB (eg. --mem 10000) or a value with a
+        # suffix (eg. --mem 10G).
         # Check to see if input is valid.
         if args.mem[-1] in ['K', 'M', 'G', 'T']:
             try:
@@ -229,12 +245,12 @@ class SlurmBuilder:
         # If args.openmode is not defined, set it according to whether requeue is set.
         # If it is defined, use whatever the user said.
         if args.openmode is None:
-            if args.norequeue:
+            if args.no_requeue:
                 args.openmode = 'truncate'
             else:
                 args.openmode = 'append'
 
-        return(args)
+        return args
 
 
     def parse_args(self) -> argparse.Namespace:
@@ -250,21 +266,30 @@ class SlurmBuilder:
         return args
 
 
-    def write_slurm_script(self, args):
+    def write_slurm_script(self, args: argparse.Namespace, scriptname: str = None):
         """
         Process the args through the list of SlurmArguments to get a SLURM submission script.
 
         :param args: An argparse object
+        :param scriptname: The filename for the output script.  If None, just print script to screen.
         """
 
         # Write the first two lines of the script
-        script = script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
+        script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
 
         # Loop over self.slurmargs and add each one in turn to the script
         for s_arg in self.slurmargs:
             arg_value = args.__dict__[s_arg.cmdvar]
             script.append(s_arg.generate_slurmtxt(arg_value))
 
+        # Print the script to screen.
+        for line in script:
+            print(line),
+
+        # Write all the data in script to the file scriptname.
+        if scriptname is not None:
+            with open(scriptname, "w") as outfile:
+                outfile.writelines(script)
 
 
 def build_slurm() -> SlurmBuilder:
@@ -275,7 +300,7 @@ def build_slurm() -> SlurmBuilder:
     """
 
     slurm_builder = SlurmBuilder()
-    slurm_builder.add_slurm_arg(cmd_var="job", vartype=str, slurm_var="job-name", helptxt="The "
+    slurm_builder.add_slurm_arg(cmd_var="job", vartype=str, slurm_var="job-name", required=True, helptxt="The "
                                 "SLURM name for your job (--job-name).  Will be used to generate log/err filenames if "
                                 "not given, in which case it will genereate the files in the current directory.")
     slurm_builder.add_slurm_arg(cmd_var="partition", vartype=str, default="main", helptxt="The "
@@ -292,10 +317,11 @@ def build_slurm() -> SlurmBuilder:
                                 "of CPUs to request for each task (--cpus-per-task).")
     slurm_builder.add_slurm_arg(cmd_var="mem", vartype=str, default="2000", helptxt="The memory to reserve (--mem).")
     slurm_builder.add_control_arg(cmd_var="outfiles", vartype=str, helptxt="The name of the log and error files "
-                                  "(--output and --err).  This will use the same name for both files, with the extensions .log and .err.")
-    slurm_builder.add_slurm_arg(cmd_var="log", vartype="str", slurm_var="output", helptxt="The name of the stdout log "
+                                  "(--output and --err).  This will use the same name for both files, with the "
+                                  "extensions .log and .err.")
+    slurm_builder.add_slurm_arg(cmd_var="log", vartype=str, slurm_var="output", helptxt="The name of the stdout log "
                                 "file (--output).  Do not use this together with the outfiles option.")
-    slurm_builder.add_slurm_arg(cmd_var="err", vartype="str", slurm_var="error", helptxt="The name of the stderr error "
+    slurm_builder.add_slurm_arg(cmd_var="err", vartype=str, slurm_var="error", helptxt="The name of the stderr error "
                                 "file (--error).  Do not use this together with the outfiles option.")
     slurm_builder.add_slurm_arg(cmd_var="time", vartype=str, default="3-00:00:00", helptxt="The maximum walltime "
                                 "allowed for the job (--time).")
@@ -306,11 +332,12 @@ def build_slurm() -> SlurmBuilder:
                                   "the script; just make the script file.")
     slurm_builder.add_control_arg(cmd_var="no_cleanup", vartype=bool, action="store_true", helptxt="Do you want to "
                                   "delete the script after it is submitted?  If sbatch submission fails, the script "
-                                  "will NOT be deleted.  If your job fails for other reasons, the script still get deleted.")
+                                  "will NOT be deleted.  If your job fails for other reasons, the script still get "
+                                  "deleted.")
     slurm_builder.add_control_arg(cmd_var="command", vartype=str, helptxt="The job's command: in other words what you "
                                   "would type into a bash shell to run it normally.  Surround with single quotes or "
                                   "use backslahes to escape symbols to make sure it is parsed correctly.  The variable "
-                                  "$file will be populated from --arraygen, when the latter is used.")
+                                  "$file will be populated from --arraygen, when the latter is used.", required=True)
 
     # Array variable stuff
     slurm_builder.add_slurm_arg(cmd_var="array", vartype=str, always_include=False, helptxt='Enter the number of '
@@ -329,63 +356,12 @@ def build_slurm() -> SlurmBuilder:
                                   'left out, the default is to use the array elements unmodified.  You must use $arr '
                                   'and $job as the array and array element variable names.')
     slurm_builder.add_control_arg(cmd_var="sleep", vartype=int, helptxt="Add a sleep command before running the main "
-                                  "command when running arrays.  The delay time will be the value given, in seconds, times the array ID.  For example, if you give --sleep 5, the array job with index "
+                                  "command when running arrays.  The delay time will be the value given, in seconds, "
+                                  "times the array ID.  For example, if you give --sleep 5, the array job with index "
                                   "123 will be delayed 615 seconds (123 * 5).", array_var=True)
 
     return slurm_builder
 
-"""
-# This function creates and returns the SLURM script as a list, where each list item is a line in the file.
-# It uses the command line arguments (args) and the list of tuples to figure out what to do with it all.
-def make_script(args, key):
-    # Add the #! and --export=ALL.
-    script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
-
-    # Loop over all arguments in the key.
-    for argnum in range(len(key)):
-        # Do not add a line unless we have processed this variable and switched the flag on addline.
-        addline = False
-        # If this is a "regular" variable that takes an argument, process it this way.
-        if key[argnum][5] == 'regular':
-            line = "#SBATCH --" + key[argnum][1] + " " + str(getattr(args, key[argnum][0])) + "\n"
-            addline = True
-        # If this is an "array" variable, process it only if usearray is given.
-        if key[argnum][5] == 'array' and args.usearray:
-            line = "#SBATCH --" + key[argnum][1] + " " + str(getattr(args, key[argnum][0])) + "\n"
-            addline = True
-        # If this is a "boolean" variable that shows up or not in the SLURM script, but doesn't take an argment, process this way.
-        if key[argnum][5] == 'boolean':
-            if getattr(args, key[argnum][0]) is True:
-                line = "#SBATCH --" + key[argnum][1] + "\n"
-                addline = True
-
-        # If we processed the line for this variable, add it to the script list of lines.
-        if addline is True:
-            script.append(line)
-
-    # If we are using arrays, add the definition of job.  Also add a delay to avoid starting all processes at the same time.
-    if args.array is not None:
-        script.append("job=$SLURM_ARRAY_TASK_ID\n")
-        if args.sleep != 0:
-            script.append("sleep $( expr " + str(args.sleep) + " \* $SLURM_ARRAY_TASK_ID )\n")
-
-    # Add the command line to the bottom of the script.  If using a "special" array, run it with srun.
-    if args.usearray and args.arraygen is not None:
-        script.append("arr=(" + args.arraygen + ")\n")
-        script.append("file=" + args.arrayformat + "\n")
-        script.append("srun " + args.command + "\n")
-    else:
-        script.append(args.command + "\n")
-
-    return(script)
-
-# Write all the data in script to the file scriptname.
-def write_script(script, scriptname):
-    outfile = open(scriptname, 'w')
-    for line in script:
-        outfile.write(line)
-    outfile.close()
-"""
 
 def main(argv):
     """
@@ -396,46 +372,22 @@ def main(argv):
     slurm_builder = build_slurm()
     # Have slurm_builder process arguments
     args = slurm_builder.parse_args()
-    # Have slurm_builder make a slurm script
-    slurm_builder.write_script
-
-
-    # Setup a list of tuples.  Each tuple should contain:
-    # (0 arg.varname, 1 SLURM variable name, 2 variable type, 3 default, 4 required, 5 class)
-    # class should be 'regular' for SLURM parameters that receive an argument, 'boolean' for those that either appear or do not,
-    # 'array' for array-related arguments, 'other' for other types of arguments.
-    varkey = gen_varkey()
-
-    # Generate the argument list using argparser
-    args = gen_argparser(argv, varkey)
-
-    # Validate arguments
-    validate(args)
-
-    # Generate "logical defaults" based on the input arguments.
-    procargs = arg_logic(args, varkey)
-
-    # Process the arguments and generate the slurm script.
-    slurm_script = make_script(procargs, varkey)
-
-    # Print the script to screen.
-    for line in slurm_script:
-        print(line),
 
     # Make a filename from the jobname, and then write the script.
     scriptname = 'tmp_' + args.job + '.sh'
-    write_script(slurm_script, scriptname)
+    # Have slurm_builder make a slurm script from parsed args
+    slurm_builder.write_slurm_script(args, scriptname)
 
     # If desired, execute the script.  Keep the error code stored in code_sbatch.
     code_sbatch = 0
-    if args.execute is True:
+    if args.no_execute is False:
         # Run the script, waiting for it to finish.
         code_sbatch = subprocess.call(['sbatch', scriptname])
-        # subprocess.call(['cat', scriptname])
 
     # If desired, cleanup the script.
-    # Only do this if code_sbatch is 0, which means that sbatch completed without an error.  Scripts that fail to submit won't be deleted for later re-submission.
-    if args.cleanup is True and code_sbatch == 0:
+    # Only do this if code_sbatch is 0, which means that sbatch completed without an error.  Scripts that fail to
+    # submit won't be deleted for later re-submission.
+    if args.no_cleanup is False and code_sbatch == 0:
         # Delete the script.
         os.remove(scriptname)
 
