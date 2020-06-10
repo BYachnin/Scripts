@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+"""
+slurmit.py is a script used to submit jobs to a SLURM processor automatically.
+"""
 
 from typing import List
 
@@ -10,6 +13,9 @@ import sys
 
 # This is an exception class to catch Argument errors.
 class ArgError(Exception):
+    """
+    Exception class for invalid Arguments.
+    """
     def __init__(self, msg):
         self.msg = msg
         print(self.msg)
@@ -20,16 +26,19 @@ class SlurmArgument:
     This is a class that holds data on a SLURM argument that can be extracted from an ArgParse context
     """
 
-    def __init__(self, slurm_var: str, cmdvar: str, vartype: type, default=None, always_include: bool = True):
+    def __init__(self, slurm_var: str, cmdvar: str, vartype: type, default=None, always_include: bool = True,
+                 booltype: bool = False) -> str:
         """
         Initialization of SlurmArgument
 
-        :param slurm_var: The name of the SLURM variable.  For example,
-        :param cmdvar: The name of the argparser variable name containing this value
-        :param vartype: [description]
-        :param default: The default value for this SLURM variable, defaults to None
-        :param required: Include this variable in the script even if it's not passed in, defaults to False
-        :return: [description]
+        :param slurm_var: The name of the SLURM variable.  For example, cups-per-task.
+        :param cmdvar: The name of the argparser variable name containing this value.
+        :param vartype: The type of the variable, as seen by the argparser.
+        :param default: The default value for this SLURM variable, defaults to None.
+        :param always_include: Include this variable in the script even if it's not passed in, defaults to False.
+        :param booltype: If True, the argument will be processed in "booltype" mode (present with no arg if arg is
+        True, not present if arg is False).  Doesn't work with always_include.
+        :return: A #SBATCH line for the current variable.
         """
 
         self.slurm_var = slurm_var
@@ -37,18 +46,27 @@ class SlurmArgument:
         self.vartype = vartype
         self.default = default
         self.always_include = always_include
+        self.booltype = booltype
 
 
     def generate_slurmtxt(self, value) -> str:
         """
-        Generate the string for a SLURM variable line
+        Generate the string for a SLURM variable line.
 
-        :param value: The value to assign to the SLURM variable
-        :return: Text for a SLURM script line
+        :param value: The value to assign to the SLURM variable.
+        :return: Text for a SLURM script line from this variable using value.
         """
 
-        if self.always_include or (value != self.default):
-            line = "#SBATCH --" + self.slurm_var + " " + value + "\n"
+        line = None
+        # In booltype mode, if True, add the line with no argument
+        if self.booltype:
+            if value is True:
+                line = "#SBATCH --" + self.slurm_var
+        else:
+            # If always_include or if we've set a non-default value, add the line
+            if self.always_include or (value != self.default):
+                line = "#SBATCH --" + self.slurm_var + " " + str(value)
+                return line
 
         return line
 
@@ -60,6 +78,7 @@ class SlurmBuilder:
 
     def __init__(self):
         """
+        init
         """
 
         # Generate an argument parser object for the class.
@@ -76,16 +95,16 @@ class SlurmBuilder:
     def add_control_arg(self, cmd_var: str, vartype: type, default=None, choices: List = None, action: str = "store",
                         required: bool = False, helptxt: str = "", array_var: bool = False):
         """
-        Add an execution control (i.e. not SLURM) argument to self.parser
+        Add an execution control (i.e. not SLURM) argument to self.parser.
 
         :param cmd_var: command-line argument name
         :param vartype: argparse data type that will be passed to this variable
-        :param default: The default value in the
+        :param default: The default value for the variable, as seen by argparser
         :param choices: A list of choices allowed for this argument
-        :param action: [description], defaults to "store"
-        :param required: Make the argument required.
-        :param helptxt: [description], defaults to ""
-        :param array_var: Argument will be passed to the array group instead of the main parser
+        :param action: The argparser "action" for this variable, defaults to "store"
+        :param required: Make the argument required by argparser.
+        :param helptxt: The argparser help text.
+        :param array_var: Argument will be passed to the array argument_group instead of the main parser.
         """
 
         # Catch passing choices if action != 'store'
@@ -111,19 +130,21 @@ class SlurmBuilder:
 
     def add_slurm_arg(self, cmd_var: str, vartype: type, slurm_var: str = None, default=None,
                       choices: List = None, action: str = "store", required: bool = False, always_include: bool = True,
-                      helptxt: str = "", array_var: bool = False):
+                      booltype: bool = False, helptxt: str = "", array_var: bool = False):
         """
-        Add a slurm-type argument to self.parser and self.slurmargs
+        Add a slurm-type argument to self.slurmargs and self.parser (by calling self.add_control_arg).
 
         :param cmd_var: command-line argument name
         :param vartype: argparse data type that will be passed to this variable
-        :param slurm_var: The SLURM variable name
-        :param default: The default value for argparse
+        :param slurm_var: The SLURM variable name.  Defaults to cmd_var if not given.
+        :param default: The default value for the variable, as seen by argparser.
         :param choices: A list of choices allowed for this argument
-        :param action: argparser action for this variable, like "store_true"
-        :param required: Make the argument required.
+        :param action: The argparser "action" for this variable, defaults to "store"
+        :param required: Make the argument required by argparser.
         :param always_include: If True, this will be added to the sbatch script regardless of whether a value is
         passed.  If False, it will only be included if a non-default value is passed in.
+        :param booltype: If True, the argument will be processed in "booltype" mode (present with no arg if arg is
+        True, not present if arg is False).
         :param helptxt: The argparse help text.
         :param array_var: Argument will be passed to the array group instead of the main parser
         """
@@ -138,13 +159,20 @@ class SlurmBuilder:
                 raise ArgError("Not all choices for --{cmd_var} are of type {vartype}".format(cmd_var=cmd_var,
                                                                                               vartype=vartype))
 
+        # always_include and booltype are mututally exclusive
+        if booltype and always_include:
+            raise ArgError("You cannot use both booltype and always_include ({slurm_var}).".format(slurm_var=slurm_var))
+        # booltype only works if vartype is bool
+        if booltype and vartype != bool:
+            raise ArgError("If using booltype mode, vartype must be bool ({slurm_var}).".format(slurm_var=slurm_var))
+
         # Add the argument to the argparser
         self.add_control_arg(cmd_var=cmd_var, vartype=vartype, helptxt=helptxt, action=action, default=default,
                              choices=choices, array_var=array_var, required=required)
 
         # Create a SlurmArgument
         slurm_arg = SlurmArgument(slurm_var=slurm_var, cmdvar=cmd_var, vartype=vartype, default=default,
-                                  always_include=always_include)
+                                  always_include=always_include, booltype=booltype)
 
         # Add the slurm_arg to the list
         self.slurmargs.append(slurm_arg)
@@ -201,7 +229,7 @@ class SlurmBuilder:
                                "--command parameter.")
 
             # If we are using special filename arrays, make sure arrayformat contains arr and [$job].
-            if args.arrayformat is not None and '$arr' not in args.arrayformat:
+            if args.arrayformat is not None and '$arr' not in args.arrayformat and '${arr' not in args.arrayformat:
                 raise ArgError("You have given --arrayformat without referencing $arr.  The $arr variable is used to "
                                "access the array elements, and must be included in --arrayformat.")
             if args.arrayformat is not None and "[$job]" not in args.arrayformat:
@@ -234,6 +262,12 @@ class SlurmBuilder:
             args.log = args.outfiles + '.log'
             args.err = args.outfiles + '.err'
 
+        # Make sure we have a value for args.log and args.err
+        if args.log is None:
+            raise ArgError("Either --outfiles and --log must be specified for output logs.")
+        if args.err is None:
+            raise ArgError("Either --outfiles and --err must be specified for output stderr.")
+
         # If args.array is empty and args.arraygen is provided, figure out args.array based on the number of
         # args.arraygen files.
         if args.array is None and args.arraygen is not None:
@@ -242,13 +276,16 @@ class SlurmBuilder:
             arraylen = len(filelist)
             args.array = "0-" + str(arraylen - 1)
 
+        if args.arraygen is not None and args.arrayformat is None:
+            args.arrayformat = '${arr[$job]}'
+
         # If args.openmode is not defined, set it according to whether requeue is set.
         # If it is defined, use whatever the user said.
         if args.openmode is None:
-            if args.no_requeue:
-                args.openmode = 'truncate'
-            else:
+            if args.no_requeue:  # args.no_requeue True means we ARE adding requeue to script
                 args.openmode = 'append'
+            else:
+                args.openmode = 'truncate'
 
         return args
 
@@ -256,6 +293,8 @@ class SlurmBuilder:
     def parse_args(self) -> argparse.Namespace:
         """
         Parse the args from self.parser and return the args Namespace object.  Includes validation and processing steps.
+
+        :return: The results of self.parser.parse_args after validation.
         """
 
         args = self.parser.parse_args()
@@ -275,16 +314,43 @@ class SlurmBuilder:
         """
 
         # Write the first two lines of the script
-        script = ['#!/bin/bash\n', '#SBATCH --export=ALL\n']
+        script = ['#!/bin/bash', '#SBATCH --export=ALL']
 
         # Loop over self.slurmargs and add each one in turn to the script
         for s_arg in self.slurmargs:
             arg_value = args.__dict__[s_arg.cmdvar]
-            script.append(s_arg.generate_slurmtxt(arg_value))
+            slurmtxt = s_arg.generate_slurmtxt(arg_value)
+            if slurmtxt:
+                script.append(slurmtxt)
+
+        # Add the echo lines for log diagnostics
+        script.append('echo "python3: " `which python3`')
+        script.append('echo "pythonpath: " ${PYTHONPATH}')
+        script.append('echo "hostname: " ${HOSTNAME}')
+        script.append('echo "PWD: " $PWD')
+
+        # If we are using arrays, add the definition of job.
+        # Also add a delay to avoid starting all processes at the same time.
+        if args.array is not None or args.arraygen is not None:
+            script.append("job=$SLURM_ARRAY_TASK_ID")
+
+            if args.sleep:
+                script.append("sleep $( expr " + str(args.sleep) + " \* $SLURM_ARRAY_TASK_ID )")
+
+        # Add the command line to the bottom of the script.  If using a "special" array, run it with srun.
+        if args.arraygen is not None:
+            script.append("arr=(" + args.arraygen + ")")
+            script.append("file=" + args.arrayformat)
+            script.append("srun " + args.command)
+        else:
+            script.append(args.command)
 
         # Print the script to screen.
         for line in script:
-            print(line),
+            print(line)
+
+        # Add newlines to the end of each line in script.
+        script = [line + "\n" for line in script]
 
         # Write all the data in script to the file scriptname.
         if scriptname is not None:
@@ -305,7 +371,8 @@ def build_slurm() -> SlurmBuilder:
                                 "not given, in which case it will genereate the files in the current directory.")
     slurm_builder.add_slurm_arg(cmd_var="partition", vartype=str, default="main", helptxt="The "
                                 "SLURM partition to run on (--partition).")
-    slurm_builder.add_slurm_arg(cmd_var="no_requeue", vartype=bool, slurm_var="requeue", action="store_true",
+    slurm_builder.add_slurm_arg(cmd_var="no_requeue", vartype=bool, slurm_var="requeue", action="store_false",
+                                always_include=False, booltype=True, default=True,
                                 helptxt="Turn off SLURM's requeue option (on by default).")
     slurm_builder.add_slurm_arg(cmd_var="openmode", vartype=str, slurm_var="open-mode", choices=["truncate", "append"],
                                 helptxt="Should the log and err files be overwritten (truncate) "
@@ -380,14 +447,17 @@ def main(argv):
 
     # If desired, execute the script.  Keep the error code stored in code_sbatch.
     code_sbatch = 0
-    if args.no_execute is False:
+    if args.no_execute is not True:
         # Run the script, waiting for it to finish.
-        code_sbatch = subprocess.call(['sbatch', scriptname])
+        try:
+            code_sbatch = subprocess.call(['sbatch', scriptname])
+        except FileNotFoundError:
+            raise FileNotFoundError("sbatch is not available.  Are you running in a SLURM environment?")
 
     # If desired, cleanup the script.
     # Only do this if code_sbatch is 0, which means that sbatch completed without an error.  Scripts that fail to
     # submit won't be deleted for later re-submission.
-    if args.no_cleanup is False and code_sbatch == 0:
+    if args.no_cleanup is not True and code_sbatch == 0:
         # Delete the script.
         os.remove(scriptname)
 
