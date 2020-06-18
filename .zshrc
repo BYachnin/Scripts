@@ -121,6 +121,10 @@ ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
 ZSH_THEME_GIT_PROMPT_DIRTY="%{$fg[blue]%}) %{$fg[yellow]%}✗"
 ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 
+# Fix keybindings for HOME and END that cause problems with some terminals
+bindkey "\033[1~" beginning-of-line
+bindkey "\033[4~" end-of-line
+
 #Any local .zshrc settings should go in .zshrc_local
 source ~/.zshrc_local
 
