@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 slurmit.py is a script used to submit jobs to a SLURM processor automatically.
 """
