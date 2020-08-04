@@ -115,7 +115,7 @@ function start_agent {
     echo succeeded
     chmod 600 "${SSH_ENV}"
     . "${SSH_ENV}" > /dev/null
-    /usr/bin/ssh-add ~/.ssh/*;
+    /usr/bin/ssh-add ~/.ssh/id_rsa*[^.pub];
 }
 
 # Source SSH settings, if applicable
