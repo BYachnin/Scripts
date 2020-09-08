@@ -82,7 +82,13 @@
                 "hidden": true,
                 "name": "Azure Cloud Shell",
                 "source": "Windows.Terminal.Azure"
-            }
+            },
+			{
+				"guid": "{fe959df3-f2fa-4eb1-a099-efa68a9159ea}",
+				"name": "linayachnin.com",
+				"commandline": "ssh -p 21098 linaykqv@www.linayachnin.com",
+				"icon": "https://www.linayachnin.com/favicon.ico"
+			}
         ]
     },
 
