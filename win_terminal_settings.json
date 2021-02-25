@@ -57,6 +57,13 @@
                 "icon": "http://www.visterrainc.com/wp-content/themes/Honeycrisp/images/favicon.png",
                 "hidden": false
             },
+			{
+                "guid": "{e78a65be-9b08-4c0e-9364-7349b016dd07}",
+                "name": "VisPD9",
+                "commandline": "ssh byachnin@vispd9",
+                "icon": "http://www.visterrainc.com/wp-content/themes/Honeycrisp/images/favicon.png",
+                "hidden": false
+            },
             {
                 "guid": "{33a3ef04-bd05-4545-bcc9-3b6a11e32c82}",
                 "name": "MIT",
