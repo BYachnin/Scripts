@@ -8,7 +8,7 @@
 {
     "$schema": "https://aka.ms/terminal-profiles-schema",
 
-    "defaultProfile": "{b466c807-95f1-43f7-8c6b-d3d47ba5c0f0}",
+    "defaultProfile": "{e78a65be-9b08-4c0e-9364-7349b016dd07}",
 
     // You can add more global application settings here.
     // To learn more about global settings, visit https://aka.ms/terminal-global-settings
@@ -81,7 +81,7 @@
             {
                 "guid": "{c6eaf9f4-32a7-5fdc-b5cf-066e8a4b1e40}",
                 "hidden": false,
-                "name": "Ubuntu-18.04",
+                "name": "Ubuntu",
                 "source": "Windows.Terminal.Wsl"
             },
             {
