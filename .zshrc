@@ -149,6 +149,9 @@ ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 bindkey "\033[1~" beginning-of-line
 bindkey "\033[4~" end-of-line
 
+# Disable "beeps" in the terminal for tab completion
+unsetopt BEEP
+
 #Any local .zshrc settings should go in .zshrc_local
 source ~/.zshrc_local
 
