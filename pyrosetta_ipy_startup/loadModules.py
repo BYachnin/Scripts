@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import pyrosetta
+
 # import visterra libraries
 from utils import antibody_utils
 from utils import file_utils
