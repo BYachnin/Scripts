@@ -32,7 +32,6 @@ from vis_rosetta.movers import design_movers
 from vis_rosetta.movers import geom_movers
 from vis_rosetta.movers import minimize_movers
 from vis_rosetta.select.selectors import Selector, CompoundSelector
-from vis_rosetta.protocols.protocol_parser import ProtocolManager
 from vis_rosetta.select import select_utils
 from vis_rosetta.tasks import task_operations
 from vis_rosetta.utils import pymol_utils
