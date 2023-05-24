@@ -70,11 +70,11 @@
                 "name": "VisPD9"
             },
             {
-                "commandline": "ssh byachnin@c3ddb01.mit.edu",
+                "commandline": "ssh byachnin_umass_edu@unity.rc.umass.edu",
                 "guid": "{33a3ef04-bd05-4545-bcc9-3b6a11e32c82}",
                 "hidden": false,
-                "icon": "https://mit.edu/themes/mit/favicon.ico",
-                "name": "MIT"
+                "icon": "https://www.umass.edu/favicon.ico",
+                "name": "Unity"
             },
             {
                 "guid": "{0caa0dad-35be-5f56-a8ff-afceeeaa6101}",
