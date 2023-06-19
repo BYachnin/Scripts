@@ -102,7 +102,7 @@ source $ZSH/oh-my-zsh.sh
 export HOSTALIASES=~/.hosts
 export PATH=$PATH:~/scripts:~/scripts/scripts_rosetta	#my scripts
 export HOSTNAME=$(hostname)
-export SINGULARITY_SHELL=/usr/bin/zsh
+export APPTAINER_SHELL=/usr/bin/zsh
 
 alias oo="nautilus . & disown"
 
